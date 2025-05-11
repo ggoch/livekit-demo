@@ -1,0 +1,33 @@
+port: 7880
+bind_addresses:
+    - ""
+rtc:
+    tcp_port: 7881
+    port_range_start: 51000
+    port_range_end: 51010
+    use_external_ip: false
+    # stun_servers:
+      # - stun.l.google.com:19302
+    enable_loopback_candidate: true
+redis:
+    address: redis:6379
+    username: ""
+    password: ""
+    db: 0
+    use_tls: false
+    sentinel_master_name: ""
+    sentinel_username: ""
+    sentinel_password: ""
+    sentinel_addresses: []
+    cluster_addresses: []
+    max_redirects: null
+turn:
+  enabled: false
+
+ingress:
+  rtmp_base_url: rtmp://localhost:1935/live
+  whip_base_url: http://localhost:8080/whip
+
+keys:
+  devkey: devsecret
+

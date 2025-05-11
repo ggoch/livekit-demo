@@ -1,0 +1,11 @@
+### 建立一個新的 RTMP Ingress
+POST http://localhost:7880/twirp/livekit.Ingress/CreateIngress
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2aWRlbyI6eyJyb29tQ3JlYXRlIjp0cnVlLCJyb29tSm9pbiI6dHJ1ZSwicm9vbSI6InRlc3Qtcm9vbSIsImNhblB1Ymxpc2giOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImluZ3Jlc3NBZG1pbiI6dHJ1ZX0sInN1YiI6ImFkbWluLWNsaWVudCIsImlzcyI6ImRldmtleSIsIm5iZiI6MTc0Njk2ODY2OSwiZXhwIjoxNzQ2OTcyMjY5fQ.nEw9YCbpQzAExAMv5G8XUmb7tD_gKpficlqDfxxYoq4
+Content-Type: application/json
+
+{
+  "input_type": "RTMP_INPUT",
+  "name": "My Ingress",
+  "room_name": "test-room",
+  "participant_identity": "camera01"
+}

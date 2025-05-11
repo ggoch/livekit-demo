@@ -1,0 +1,8 @@
+### 查詢指定房間內的參與者列表
+POST http://localhost:7880/twirp/livekit.RoomService/ListParticipants
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2aWRlbyI6eyJyb29tQ3JlYXRlIjp0cnVlLCJyb29tSm9pbiI6dHJ1ZSwicm9vbSI6InRlc3Qtcm9vbSIsImNhblB1Ymxpc2giOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImluZ3Jlc3NBZG1pbiI6dHJ1ZX0sInN1YiI6ImFkbWluLWNsaWVudCIsImlzcyI6ImRldmtleSIsIm5iZiI6MTc0NjcxNjEyMywiZXhwIjoxNzQ2NzE5NzIzfQ.uoP6u-8dxlmwQrR-Z26Xz2tSNDAsmtZ9J3H8QETtlF0
+Content-Type: application/json
+
+{
+  "room": "test-room"
+}

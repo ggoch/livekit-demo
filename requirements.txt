@@ -1,0 +1,8 @@
+# step1: python -m venv cuda
+# step2: ./cuda/Scripts/Activate 
+# step: pip install -r requirements.txt
+
+# Base ----------------------------------------
+PyJWT
+requests
+livekit-api

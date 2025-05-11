@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <title>LiveKit 測試</title>
+  <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.11.3/dist/livekit-client.umd.min.js"></script>
+</head>
+<body>
+  <h2>LiveKit 測試頁面</h2>
+  <button id="join">加入房間</button>
+  <div id="video-container"></div>
+
+  <script>
+    const wsUrl = 'ws://localhost:7880'; // 請根據您的 LiveKit 伺服器調整
+    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2aWRlbyI6eyJyb29tQ3JlYXRlIjp0cnVlLCJyb29tSm9pbiI6dHJ1ZSwicm9vbSI6InRlc3Qtcm9vbSIsImNhblB1Ymxpc2giOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImluZ3Jlc3NBZG1pbiI6dHJ1ZX0sInN1YiI6ImFkbWluLWNsaWVudCIsImlzcyI6ImRldmtleSIsIm5iZiI6MTc0Njk2ODY2OSwiZXhwIjoxNzQ2OTcyMjY5fQ.nEw9YCbpQzAExAMv5G8XUmb7tD_gKpficlqDfxxYoq4'; // 請替換為您實際的存取權杖
+
+    const room = new LivekitClient.Room();
+
+    document.getElementById('join').onclick = async () => {
+      try {
+        await room.connect(wsUrl, token);
+        console.log('已連線至房間:', room.name);
+
+        // 啟用本地攝影機和麥克風
+        await room.localParticipant.enableCameraAndMicrophone();
+
+        // 處理遠端參與者的媒體軌道
+        room.on(LivekitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+          const videoElement = track.attach();
+          document.getElementById('video-container').appendChild(videoElement);
+        });
+      } catch (error) {
+        console.error('連線失敗:', error);
+      }
+    };
+  </script>
+</body>
+</html>
+
