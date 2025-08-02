@@ -1,39 +1,98 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
-<head>
-  <meta charset="UTF-8" />
-  <title>LiveKit 測試</title>
-  <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.11.3/dist/livekit-client.umd.min.js"></script>
-</head>
-<body>
-  <h2>LiveKit 測試頁面</h2>
-  <button id="join">加入房間</button>
-  <div id="video-container"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <title>LiveKit 測試</title>
+    <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.11.3/dist/livekit-client.umd.min.js"></script>
+  </head>
+  <body>
+    <h2>LiveKit 測試頁面</h2>
+    <button id="join">加入房間</button>
+    <div id="video-container"></div>
 
-  <script>
-    const wsUrl = 'ws://localhost:7880'; // 請根據您的 LiveKit 伺服器調整
-    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2aWRlbyI6eyJyb29tQ3JlYXRlIjp0cnVlLCJyb29tSm9pbiI6dHJ1ZSwicm9vbSI6InRlc3Qtcm9vbSIsImNhblB1Ymxpc2giOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImluZ3Jlc3NBZG1pbiI6dHJ1ZX0sInN1YiI6ImFkbWluLWNsaWVudCIsImlzcyI6ImRldmtleSIsIm5iZiI6MTc0Njk2ODY2OSwiZXhwIjoxNzQ2OTcyMjY5fQ.nEw9YCbpQzAExAMv5G8XUmb7tD_gKpficlqDfxxYoq4'; // 請替換為您實際的存取權杖
+    <script>
+      const wsUrl = "ws://localhost:7880";
+      const token =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2aWRlbyI6eyJyb29tQ3JlYXRlIjp0cnVlLCJyb29tSm9pbiI6dHJ1ZSwicm9vbSI6InRlc3Qtcm9vbSIsImNhblB1Ymxpc2giOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImluZ3Jlc3NBZG1pbiI6dHJ1ZX0sInN1YiI6ImFkbWluLWNsaWVudCIsImlzcyI6ImRldmtleSIsIm5iZiI6MTc1MDgyOTgwMCwiZXhwIjoxNzUwODY1ODAwfQ.tsqgVgvcGzjFkn5zkwkGw5E7_JgIFLx2vThl9AE45AY"; // 請自行替換
 
-    const room = new LivekitClient.Room();
+      const room = new LivekitClient.Room();
 
-    document.getElementById('join').onclick = async () => {
-      try {
-        await room.connect(wsUrl, token);
-        console.log('已連線至房間:', room.name);
+      // 處理訂閱後顯示畫面
+      function handleTrack(track, publication, participant) {
+        console.log(
+          `參與者 ${participant.identity} 的軌道已訂閱: ${track.kind}`
+        );
 
-        // 啟用本地攝影機和麥克風
-        await room.localParticipant.enableCameraAndMicrophone();
-
-        // 處理遠端參與者的媒體軌道
-        room.on(LivekitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+        if (track.kind === "video") {
           const videoElement = track.attach();
-          document.getElementById('video-container').appendChild(videoElement);
-        });
-      } catch (error) {
-        console.error('連線失敗:', error);
-      }
-    };
-  </script>
-</body>
-</html>
+          videoElement.autoplay = true;
+          videoElement.playsInline = true;
+          videoElement.style.width = "100%";
+          videoElement.style.maxWidth = "300px";
+          videoElement.style.border = "1px solid #ccc";
 
+          const container = document.getElementById("video-container");
+          if (container) {
+            container.appendChild(videoElement);
+          }
+        }
+      }
+
+      document.getElementById("join").onclick = async () => {
+        try {
+          await room.connect(wsUrl, token);
+          console.log("✅ 已連線至房間:", room.name);
+
+          // 取得設備
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const hasCamera = devices.some((d) => d.kind === "videoinput");
+          const hasMic = devices.some((d) => d.kind === "audioinput");
+
+          try {
+            if (hasCamera) {
+              await room.localParticipant.setCameraEnabled(true);
+            }
+            if (hasMic) {
+              await room.localParticipant.setMicrophoneEnabled(true);
+            }
+            if (!hasCamera && !hasMic) {
+              console.warn("⚠️ 無可用的攝影機或麥克風，跳過啟用媒體。");
+            }
+          } catch (err) {
+            console.error("❌ 啟用媒體時出錯:", err);
+          }
+
+          // 即時訂閱遠端軌道
+          room.on(LivekitClient.RoomEvent.TrackSubscribed, handleTrack);
+
+          // 發現遠端 track 時嘗試訂閱
+          room.on(
+            LivekitClient.RoomEvent.TrackPublished,
+            async (publication, participant) => {
+              console.log(
+                `🔍 發現 track: ${publication.kind} from ${participant.identity}`
+              );
+              if (publication.kind === "video" && !publication.isSubscribed) {
+                try {
+                  await participant.subscribe(publication);
+                } catch (err) {
+                  console.error("❌ 手動訂閱失敗:", err);
+                }
+              }
+            }
+          );
+
+          // 有人加入房間
+          room.on(
+            LivekitClient.RoomEvent.ParticipantConnected,
+            (participant) => {
+              console.log("👋 新參與者加入:", participant.identity);
+            }
+          );
+        } catch (error) {
+          console.error("❌ 連線失敗:", error);
+        }
+      };
+    </script>
+  </body>
+</html>

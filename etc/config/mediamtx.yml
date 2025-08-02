@@ -1,0 +1,56 @@
+paths:
+  camera1:
+    # 來源串流（攝影機 RTSP 位址）
+    source: rtsp://admin:dh123456@192.168.1.108:554/cam/realmonitor?channel=1&subtype=1
+    # sourceProtocol: tcp
+    # runOnInit: ffmpeg -rtsp_transport tcp -i rtsp://admin:dh123456@192.168.1.108:554/cam/realmonitor?channel=1&subtype=1 -c copy -f flv rtmp://livekit-ingress:1935/live/EWjyQk5w6T8a
+    runOnInit: >
+      ffmpeg
+      -rtsp_transport tcp
+      -fflags nobuffer
+      -flags low_delay
+      -analyzeduration 500000
+      -probesize 500000
+      -use_wallclock_as_timestamps 1
+      -fflags +genpts
+      -i "rtsp://admin:dh123456@192.168.1.108:554/cam/realmonitor?channel=1&subtype=1"
+      -c:v libx264
+      -preset ultrafast
+      -tune zerolatency
+      -c:a aac
+      -ar 44100
+      -b:a 128k
+      -f flv "rtmp://livekit-ingress:1935/live/EWjyQk5w6T8a"
+    # runOnInit: >
+    #   ffmpeg 
+    #   -rtsp_transport tcp 
+    #   -fflags nobuffer 
+    #   -flags low_delay 
+    #   -analyzeduration 500000 
+    #   -probesize 500000 
+    #   -use_wallclock_as_timestamps 1 
+    #   -fflags +genpts 
+    #   -i "rtsp://admin:dh123456@192.168.1.108:554/cam/realmonitor?channel=1&subtype=1" 
+    #   -c:v libvpx -b:v 2M -g 30 -keyint_min 30 
+    #   -c:a libopus -b:a 128k 
+    #   -f webm 
+    #   "http://livekit-ingress:8080/whip/iR3xHc5gwXw2"
+
+    # -headers "Authorization: Bearer YOUR_TOKEN" \
+    # runOnInit: >
+    #   ffmpeg -rtsp_transport tcp -fflags nobuffer -flags low_delay -analyzeduration 500000 -probesize 500000 -use_wallclock_as_timestamps 1 -fflags +genpts -i "rtsp://admin:dh123456@192.168.1.108:554/cam/realmonitor?channel=1&subtype=1" -c:v libx264 -preset ultrafast -tune zerolatency -c:a aac -f webm "http://livekit-ingress:8080/whip/iR3xHc5gwXw2"
+    # runOnInit: >
+    #   gst-launch-1.0 videotestsrc 
+    #   ! video/x-raw,width=1920,height=1080,format=I420 
+    #   ! x264enc speed-preset=ultrafast bitrate=2000 
+    #   ! video/x-h264,profile=baseline 
+    #   ! whipclientsink signaller::whip-endpoint=http://livekit-ingress:8080/whip/iR3xHc5gwXw2
+
+  # 測試用虛擬串流
+  # teststream:
+  #   runOnInit: ffmpeg -re -f lavfi -i testsrc=size=1280x720:rate=30 \
+  #     -c:v libx264 -preset ultrafast -tune zerolatency -f rtsp rtsp://localhost:8554/teststream
+
+# WebRTC / HLS 啟用
+webrtc: yes
+hls: yes

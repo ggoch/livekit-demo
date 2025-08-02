@@ -34,18 +34,35 @@ services:
       - ./config/ingress.yaml:/ingress.yaml
 
 
-  ffmpeg-streamer:
-    image: jrottenberg/ffmpeg:6.0-ubuntu2204
+  # ffmpeg-streamer:
+  #   image: jrottenberg/ffmpeg:6.0-ubuntu2204
+  #   volumes:
+  #     - ./videos:/videos
+  #   depends_on:
+  #     - livekit-ingress
+  #   entrypoint: >
+  #     ffmpeg -re -stream_loop -1 -i /videos/8.mp4
+  #            -vf "scale=1280:720"
+  #            -pix_fmt yuv420p -r 25 -g 50 -keyint_min 50 -sc_threshold 0
+  #            -c:v libx264 -preset veryfast -tune zerolatency -bf 0
+  #            -c:a aac -b:a 128k
+  #            -f flv rtmp://livekit-ingress:1935/live/G9erFR43TKEB
+
+  mediamtx:
+    image: bluenviron/mediamtx:latest-ffmpeg
+    container_name: mediamtx
+    restart: unless-stopped
+    # network_mode: host  # 確保 RTSP UDP/WebRTC 正常運作
     volumes:
-      - ./videos:/videos
-    depends_on:
-      - livekit-ingress
-    entrypoint: >
-      ffmpeg -re -stream_loop -1 -i /videos/8.mp4
-             -vf "scale=1280:720"
-             -pix_fmt yuv420p -r 25 -g 50 -keyint_min 50 -sc_threshold 0
-             -c:v libx264 -preset veryfast -tune zerolatency -bf 0
-             -c:a aac -b:a 128k
-             -f flv rtmp://livekit-ingress:1935/live/BG2tGvA3mm58
+      - ./config/mediamtx.yml:/mediamtx.yml:ro
+      - ./recordings:/recordings
+    environment:
+      # 可選：限制協議，避免 NAT 造成 UDP 問題
+      MTX_PROTOCOLS: tcp
+    # 若不使用 host 模式，也可以這樣開 port：
+    ports:
+      - "8554:8554"   # RTSP
+      - "8888:8888"   # WebRTC/HLS
+      - "8889:8889"   # WHIP/WHEP
 
 

@@ -17,7 +17,7 @@ grants = VideoGrants(
 token = AccessToken(api_key, api_secret)
 token.with_identity("admin-client")
 token.with_grants(grants)
-token.with_ttl(datetime.timedelta(hours=1))  # 設定權杖有效期限為 1 小時
+token.with_ttl(datetime.timedelta(hours=10))  # 設定權杖有效期限為 10 小時
 
 # 生成 JWT 權杖
 jwt = token.to_jwt()

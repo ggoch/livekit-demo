@@ -6,3 +6,7 @@
 PyJWT
 requests
 livekit-api
+livekit-agents[google,images]~=1.0,>=1.0.18
+livekit-plugins-noise-cancellation~=0.2
+python-dotenv
+asyncio
