@@ -1,68 +1,101 @@
 version: '3.8'
 
 services:
-  redis:
-    image: redis:7
-    ports:
-      - "6379:6379"
+  # redis:
+  #   image: redis:7
+  #   network_mode: host
+  #   # ports:
+  #   #   - "6379:6379"
 
-  livekit:
-    image: livekit/livekit-server:latest
-    command: --config /etc/livekit.yaml
-    volumes:
-      - ./config/livekit.yaml:/etc/livekit.yaml
-    ports:
-      - "7880:7880" # HTTP API
-      - "7881:7881" 
-      - "51000-51010:51000-51010/udp" # WebRTC UDP
-    environment:
-      - LIVEKIT_REDIS_HOST=redis
-      - LIVEKIT_API_KEY=devkey
-      - LIVEKIT_API_SECRET=devsecret
-
-  livekit-ingress:
-    image: livekit/ingress:latest
-    restart: always
-    ports:
-      - "1935:1935" # RTMP
-      - "8080:8080" # WHIP
-    depends_on:
-      - livekit
-    environment:
-      - INGRESS_CONFIG_FILE=/ingress.yaml
-    volumes:
-      - ./config/ingress.yaml:/ingress.yaml
-
-
-  # ffmpeg-streamer:
-  #   image: jrottenberg/ffmpeg:6.0-ubuntu2204
+  # livekit:
+  #   image: livekit/livekit-server:latest
+  #   container_name: livekit
+  #   restart: unless-stopped
+  #   command: --config /etc/livekit.yaml
+  #   network_mode: host
   #   volumes:
-  #     - ./videos:/videos
+  #     - livekit-config:/etc/livekit.yaml
+  #   # ports:
+  #   #   - "7880:7880" # HTTP API
+  #   #   - "7881:7881" 
+  #   #   - "51000-51010:51000-51010/udp" # WebRTC UDP
+  #   environment:
+  #     - LIVEKIT_REDIS_HOST=redis
+  #     - LIVEKIT_API_KEY=devkey
+  #     - LIVEKIT_API_SECRET=devsecret
+
+  # livekit-ingress:
+  #   image: livekit/ingress:latest
+  #   container_name: livekit-ingress
+  #   restart: unless-stopped
+  #   network_mode: host
+  #   # ports:
+  #   #   - "1935:1935" # RTMP
+  #   #   - "8080:8080" # WHIP
   #   depends_on:
-  #     - livekit-ingress
-  #   entrypoint: >
-  #     ffmpeg -re -stream_loop -1 -i /videos/8.mp4
-  #            -vf "scale=1280:720"
-  #            -pix_fmt yuv420p -r 25 -g 50 -keyint_min 50 -sc_threshold 0
-  #            -c:v libx264 -preset veryfast -tune zerolatency -bf 0
-  #            -c:a aac -b:a 128k
-  #            -f flv rtmp://livekit-ingress:1935/live/G9erFR43TKEB
+  #     - livekit
+  #   environment:
+  #     - INGRESS_CONFIG_FILE=/ingress.yaml
+  #   volumes:
+  #     - livekit-ingress-config:/ingress.yaml
 
-  mediamtx:
-    image: bluenviron/mediamtx:latest-ffmpeg
-    container_name: mediamtx
-    restart: unless-stopped
-    # network_mode: host  # 確保 RTSP UDP/WebRTC 正常運作
+  # coturn:
+  #   container_name: coturn
+  #   image: instrumentisto/coturn:latest
+  #   restart: unless-stopped
+  #   network_mode: host
+  #   # ports:
+  #   #   - "3478:3478/udp"
+  #   #   - "3478:3478/tcp"
+  #   #   - "5349:5349/tcp"
+  #   volumes:
+  #     - turn-config:/etc/coturn/turnserver.conf
+  #     - turn-cert:/cert
+
+
+  ffmpeg-streamer:
+    image: jrottenberg/ffmpeg:6.0-ubuntu2204
     volumes:
-      - ./config/mediamtx.yml:/mediamtx.yml:ro
-      - ./recordings:/recordings
-    environment:
-      # 可選：限制協議，避免 NAT 造成 UDP 問題
-      MTX_PROTOCOLS: tcp
-    # 若不使用 host 模式，也可以這樣開 port：
-    ports:
-      - "8554:8554"   # RTSP
-      - "8888:8888"   # WebRTC/HLS
-      - "8889:8889"   # WHIP/WHEP
+      - ./videos:/videos
+    # depends_on:
+    #   - livekit-ingress
+    entrypoint: >
+      ffmpeg -re -stream_loop -1 -i /videos/8.mp4
+            -vf "scale=1280:720"
+            -pix_fmt yuv420p -r 25 -g 50 -keyint_min 50 -sc_threshold 0
+            -c:v libx264 -preset veryfast -tune zerolatency -bf 0
+            -c:a aac -b:a 128k
+            -f flv rtmp://ingress.tnebp.furthersoftware.com.tw/live/3VcE74quyAsD
 
+  # mediamtx:
+  #   image: bluenviron/mediamtx:latest-ffmpeg
+  #   container_name: mediamtx
+  #   restart: unless-stopped
+  #   # network_mode: host  # 確保 RTSP UDP/WebRTC 正常運作
+  #   volumes:
+  #     - ./config/mediamtx.yml:/mediamtx.yml:ro
+  #     - ./recordings:/recordings
+  #   environment:
+  #     # 可選：限制協議，避免 NAT 造成 UDP 問題
+  #     MTX_PROTOCOLS: tcp
+  #   # 若不使用 host 模式，也可以這樣開 port：
+  #   ports:
+  #     - "8554:8554"   # RTSP
+  #     - "8888:8888"   # WebRTC/HLS
+  #     - "8889:8889"   # WHIP/WHEP
 
+volumes:
+  redis_data:
+    driver: local
+  livekit-config:
+    name: livekit-config
+    external: true
+  livekit-ingress-config:
+    name: livekit-ingress-config
+    external: true
+  turn-config:
+    name: turn-config
+    external: true
+  turn-cert:
+    name: turn-cert
+    external: true

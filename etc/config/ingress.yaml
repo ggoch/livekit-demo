@@ -1,8 +1,8 @@
 api_key: devkey
-api_secret: devsecret
-ws_url: ws://livekit:7880
+api_secret: k7sd8fh2jf9832j2sdf8sdhkj23jk2jkf93hkj2kjsdf
+ws_url: ws://localhost:7880
 redis:
-  address: redis:6379
+  address: localhost:6379
 logging:
   level: debug
 rtmp_port: 1935
